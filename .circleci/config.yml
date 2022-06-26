@@ -4,6 +4,14 @@ jobs:
   build:
     docker:
       - image: circleci/php:7.4-node-browsers
+      - image: circleci/mariadb:10.3.32-ram
+    environment:
+      APP_ENV: testing
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: circle_test
+      DB_USERNAME: root
     steps:
       - checkout
       - run: sudo composer self-update --1
@@ -27,6 +35,11 @@ jobs:
           paths:
             - node_modules
       - run: npm run dev
+      - run:
+          name: get ready for mariadb
+          command: |
+            sudo docker-php-ext-install pdo_mysql
+            dockerize -wait tcp://127.0.0.1:3306 -timeout 1m
       - run:
           name: php test
           command: vendor/bin/phpunit
